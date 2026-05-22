@@ -1,0 +1,16 @@
+# Thư mục thư viện Node
+node_modules/
+api/node_modules/
+
+# Cấu hình môi trường bảo mật (Chứa API key & PIN)
+.env
+.env.local
+
+# Database local phục vụ test máy tính (Tránh ghi đè khi lên production)
+api/articles_local.json
+
+# Thư mục build và file rác hệ thống
+dist/
+.DS_Store
+Thumbs.db
+.vercel

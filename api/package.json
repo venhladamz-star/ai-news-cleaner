@@ -1,0 +1,16 @@
+{
+  "name": "ai-news-cleaner-api",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "index.js",
+  "dependencies": {
+    "@google/generative-ai": "^0.11.0",
+    "cheerio": "^1.0.0-rc.12",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "mongodb": "^6.6.2",
+    "node-fetch": "^3.3.2",
+    "openai": "^4.47.1"
+  }
+}

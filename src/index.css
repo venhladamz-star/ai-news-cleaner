@@ -1,0 +1,479 @@
+/* -------------------------------------------------------------
+   AI NEWS CURATED - DESIGN SYSTEM & MAGAZINE THEME (VANILLA CSS)
+   ------------------------------------------------------------- */
+
+:root {
+  --font-primary: 'Inter', sans-serif;
+  --font-title: 'Outfit', sans-serif;
+
+  /* Bảng màu chính */
+  --bg-deep: #080b11;
+  --bg-card: rgba(15, 23, 42, 0.45);
+  --bg-card-hover: rgba(30, 41, 59, 0.65);
+  
+  --color-primary: #8b5cf6;       /* Neon Purple */
+  --color-primary-light: #a78bfa;
+  --color-secondary: #10b981;     /* Emerald Green */
+  --color-secondary-light: #34d399;
+  --color-accent: #6366f1;        /* Indigo */
+  
+  --color-text-main: #f8fafc;     /* Slate 50 */
+  --color-text-muted: #94a3b8;    /* Slate 400 */
+  --color-text-dark: #475569;     /* Slate 600 */
+  
+  --border-color: rgba(255, 255, 255, 0.06);
+  --border-glow: rgba(139, 92, 246, 0.15);
+  
+  --error: #f43f5e;               /* Rose Red */
+  --success: #10b981;
+}
+
+/* Reset mặc định */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-primary);
+  background-color: var(--bg-deep);
+  color: var(--color-text-main);
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Nền Glowing Orbs huyền ảo */
+body::before {
+  content: "";
+  position: absolute;
+  top: -15%;
+  left: -15%;
+  width: 60%;
+  height: 60%;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.12) 0%, rgba(0,0,0,0) 70%);
+  z-index: -1;
+  pointer-events: none;
+  filter: blur(100px);
+}
+
+body::after {
+  content: "";
+  position: absolute;
+  bottom: -15%;
+  right: -15%;
+  width: 60%;
+  height: 60%;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, rgba(0,0,0,0) 70%);
+  z-index: -1;
+  pointer-events: none;
+  filter: blur(100px);
+}
+
+/* Container chính */
+.app-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+/* THANH ĐIỀU HƯỚNG (NAVIGATION BAR) */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-color);
+  border-radius: 1rem;
+  margin-bottom: 2.5rem;
+}
+
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-family: var(--font-title);
+  font-size: 1.35rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #ffffff, var(--color-primary-light));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.nav-links {
+  display: flex;
+  gap: 1rem;
+}
+
+.nav-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--color-text-muted);
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-family: var(--font-title);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.nav-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.nav-btn.active {
+  background: rgba(139, 92, 246, 0.1);
+  border-color: rgba(139, 92, 246, 0.25);
+  color: var(--color-primary-light);
+}
+
+/* Tiêu đề chính ứng dụng */
+.header-section {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.main-title {
+  font-family: var(--font-title);
+  font-size: 2.75rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #ffffff 40%, #a78bfa 70%, #34d399 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  font-size: 1.05rem;
+  color: var(--color-text-muted);
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+/* Thiết kế Glassmorphism cho các khung (Cards) */
+.glass-panel {
+  background: var(--bg-card);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--border-color);
+  border-radius: 1.25rem;
+  padding: 2rem;
+  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.6);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-panel:hover {
+  border-color: rgba(139, 92, 246, 0.15);
+  box-shadow: 0 15px 45px -10px rgba(139, 92, 246, 0.05);
+}
+
+/* -------------------------------------------------------------
+   READER DASHBOARD: TRANG CHỦ ĐỘC GIẢ
+   ------------------------------------------------------------- */
+.dashboard-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.search-box {
+  position: relative;
+  flex: 1;
+  max-width: 400px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-dark);
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 2.75rem;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid var(--border-color);
+  border-radius: 0.75rem;
+  color: #ffffff;
+  font-family: var(--font-primary);
+  font-size: 0.95rem;
+  transition: all 0.3s;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 15px rgba(139, 92, 246, 0.15);
+}
+
+/* Nhóm các bài viết theo Ngày Tháng */
+.date-group {
+  margin-bottom: 3.5rem;
+}
+
+.date-group-header {
+  font-family: var(--font-title);
+  font-size: 1.45rem;
+  font-weight: 700;
+  color: var(--color-primary-light);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding-bottom: 0.5rem;
+}
+
+.date-badge {
+  font-size: 0.85rem;
+  background: rgba(139, 92, 246, 0.1);
+  padding: 0.2rem 0.6rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+/* Lưới hiển thị các thẻ bài viết */
+.articles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 1.75rem;
+}
+
+/* Thẻ bài viết */
+.article-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.article-card-header {
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.article-domain-badge {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-secondary-light);
+  font-weight: 700;
+  background: rgba(16, 185, 129, 0.08);
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.35rem;
+}
+
+.article-card-title {
+  font-family: var(--font-title);
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.4;
+  color: #ffffff;
+  margin-bottom: 0.75rem;
+  transition: color 0.3s;
+  /* Giới hạn hiển thị tối đa 3 dòng tiêu đề */
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.article-card:hover .article-card-title {
+  color: var(--color-primary-light);
+}
+
+.article-card-excerpt {
+  font-size: 0.95rem;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+  margin-bottom: 1.5rem;
+  flex-grow: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.article-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255,255,255,0.03);
+  font-size: 0.85rem;
+  color: var(--color-text-dark);
+}
+
+.learning-count-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--color-primary-light);
+  font-weight: 600;
+}
+
+.read-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--color-primary-light);
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.article-card:hover .read-btn {
+  transform: translateX(4px);
+  color: #ffffff;
+}
+
+/* -------------------------------------------------------------
+   KHI KHÔNG CÓ BÀI BÁO NÀO
+   ------------------------------------------------------------- */
+.empty-state {
+  text-align: center;
+  padding: 5rem 2rem;
+}
+
+.empty-icon-wrapper {
+  width: 4rem;
+  height: 4rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color);
+  border-radius: 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  margin-bottom: 1.5rem;
+}
+
+/* -------------------------------------------------------------
+   GIAO DIỆN ADMIN (PIN VERIFICATION & FORM)
+   ------------------------------------------------------------- */
+.admin-lock-card {
+  max-width: 450px;
+  margin: 4rem auto;
+  text-align: center;
+  animation: fadeInUp 0.5s ease-out;
+}
+
+.lock-icon-wrapper {
+  width: 3.5rem;
+  height: 3.5rem;
+  background: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.25);
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary-light);
+  margin-bottom: 1.5rem;
+}
+
+.pin-input-group {
+  margin: 1.5rem 0;
+}
+
+.pin-input {
+  width: 100%;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid var(--border-color);
+  border-radius: 0.75rem;
+  color: #ffffff;
+  font-size: 1.5rem;
+  letter-spacing: 0.5em;
+  text-align: center;
+  transition: all 0.3s;
+}
+
+.pin-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 15px rgba(139, 92, 246, 0.2);
+}
+
+.admin-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 1rem;
+}
+
+.admin-title {
+  font-family: var(--font-title);
+  font-size: 1.75rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  color: var(--color-text-main);
+  padding: 0.6rem 1.2rem;
+  border-radius: 0.6rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+/* -------------------------------------------------------------
+   CHI TIẾT ĐỘC GIẢ ĐỌC BÀI BÁO (READER VIEW)
+   ------------------------------------------------------------- */
+.reader-back-btn {
+  margin-bottom: 1.5rem;
+  animation: fadeIn 0.5s ease-out;
+}
+
+/* -------------------------------------------------------------
+   TRÍ TỰ DO TRƯỚT HOẠT ẢNH MỊN MÀNG (CSS ANIMATIONS)
+   ------------------------------------------------------------- */
+.animate-fadeIn {
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
