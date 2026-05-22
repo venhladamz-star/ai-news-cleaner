@@ -6,6 +6,10 @@ api/node_modules/
 .env
 .env.local
 
+# Khóa tài khoản dịch vụ Firebase (Tuyệt đối bảo mật)
+firebase-key.json
+*.json.key
+
 # Database local phục vụ test máy tính (Tránh ghi đè khi lên production)
 api/articles_local.json
 

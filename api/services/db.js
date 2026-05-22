@@ -1,3 +1,4 @@
+import admin from 'firebase-admin';
 import { MongoClient, ObjectId } from 'mongodb';
 import fs from 'fs';
 import path from 'path';
@@ -12,7 +13,11 @@ const LOCAL_DB_PATH = path.join(__dirname, '..', 'articles_local.json');
 // Biến lưu trữ RAM tạm thời
 let memoryArticles = [];
 
-// Khởi tạo biến MongoDB
+// Trạng thái kết nối cơ sở dữ liệu: 'local', 'mongodb', 'firebase'
+let dbMode = 'local';
+
+// Khởi tạo các biến kết nối
+let firestoreDb = null;
 let client = null;
 let db = null;
 let articlesCollection = null;
@@ -29,11 +34,52 @@ try {
 }
 
 /**
- * Kết nối tới MongoDB nếu có cấu hình trong env
+ * Khởi tạo kết nối tới Database (Ưu tiên Firebase Firestore -> MongoDB Atlas -> Local JSON)
  */
 async function initDb() {
+  // 1. Thử kết nối Firebase Firestore nếu có cấu hình
+  const firebaseAccount = process.env.FIREBASE_SERVICE_ACCOUNT;
+  const firebaseAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
+
+  if (
+    (firebaseAccount && firebaseAccount.trim() !== '') ||
+    (firebaseAccountPath && firebaseAccountPath.trim() !== '')
+  ) {
+    try {
+      if (!admin.apps.length) {
+        console.log('🔌 Đang kết nối tới Firebase Firestore...');
+        let credential;
+
+        if (firebaseAccount && firebaseAccount.trim() !== '') {
+          // Parse trực tiếp chuỗi JSON lưu trong biến môi trường (Lý tưởng trên Vercel)
+          credential = admin.credential.cert(JSON.parse(firebaseAccount));
+        } else if (firebaseAccountPath && firebaseAccountPath.trim() !== '') {
+          // Load từ đường dẫn file cục bộ (Lý tưởng khi chạy test trên máy tính cá nhân)
+          const resolvedPath = path.resolve(process.cwd(), firebaseAccountPath);
+          if (fs.existsSync(resolvedPath)) {
+            const rawKey = fs.readFileSync(resolvedPath, 'utf8');
+            credential = admin.credential.cert(JSON.parse(rawKey));
+          } else {
+            throw new Error(`Không tìm thấy file Firebase key tại: ${resolvedPath}`);
+          }
+        }
+
+        admin.initializeApp({
+          credential: credential
+        });
+
+        firestoreDb = admin.firestore();
+        console.log('✅ Đã kết nối thành công tới Firebase Firestore!');
+      }
+      dbMode = 'firebase';
+      return true;
+    } catch (error) {
+      console.error('❌ Lỗi kết nối Firebase Firestore, thử chuyển sang phương án khác:', error.message);
+    }
+  }
+
+  // 2. Thử kết nối tới MongoDB nếu có cấu hình trong env
   const mongoUri = process.env.MONGODB_URI;
-  
   if (mongoUri && mongoUri.trim() !== '' && mongoUri !== 'your_mongodb_uri_here') {
     try {
       if (!client) {
@@ -44,24 +90,26 @@ async function initDb() {
         articlesCollection = db.collection('articles');
         console.log('✅ Đã kết nối thành công tới MongoDB Atlas!');
       }
+      dbMode = 'mongodb';
       return true;
     } catch (error) {
-      console.error('❌ Lỗi kết nối MongoDB Atlas, tự động chuyển về Local Database:', error.message);
-      return false;
+      console.error('❌ Lỗi kết nối MongoDB Atlas, chuyển về Local Database:', error.message);
     }
   }
+
+  // 3. Fallback về chế độ lưu trữ cục bộ
+  dbMode = 'local';
   return false;
 }
 
 /**
- * Ghi đè dữ liệu vào file local (chỉ hoạt động khi chạy local máy tính)
+ * Ghi dữ liệu vào file local (Chỉ hoạt động khi chạy máy tính cục bộ)
  */
 function saveLocalFile() {
   try {
     fs.writeFileSync(LOCAL_DB_PATH, JSON.stringify(memoryArticles, null, 2), 'utf8');
   } catch (err) {
-    // Có thể lỗi do hệ thống file read-only khi deploy Vercel mà chưa cài MongoDB
-    console.log('⚠️ Lưu file cục bộ thất bại (đặc trưng môi trường Serverless Vercel):', err.message);
+    console.log('⚠️ Lưu file cục bộ thất bại (môi trường Serverless Vercel):', err.message);
   }
 }
 
@@ -70,16 +118,36 @@ function saveLocalFile() {
  * @returns {Promise<Array>}
  */
 export async function getArticles() {
-  const isMongo = await initDb();
-  
-  if (isMongo && articlesCollection) {
+  await initDb();
+
+  // CHẾ ĐỘ 1: FIREBASE FIRESTORE
+  if (dbMode === 'firebase' && firestoreDb) {
+    try {
+      const snapshot = await firestoreDb.collection('articles')
+        .orderBy('createdAt', 'desc')
+        .get();
+
+      const articles = [];
+      snapshot.forEach(doc => {
+        articles.push({
+          id: doc.id,
+          ...doc.data()
+        });
+      });
+      return articles;
+    } catch (err) {
+      console.error('Lỗi khi lấy dữ liệu từ Firebase, dùng tạm Local RAM:', err);
+    }
+  }
+
+  // CHẾ ĐỘ 2: MONGODB ATLAS
+  if (dbMode === 'mongodb' && articlesCollection) {
     try {
       const articles = await articlesCollection
         .find({})
         .sort({ createdAt: -1 })
         .toArray();
-      
-      // Chuyển đổi _id của mongo thành id chuẩn cho frontend
+
       return articles.map(art => ({
         ...art,
         id: art._id.toString()
@@ -88,8 +156,8 @@ export async function getArticles() {
       console.error('Lỗi khi lấy bài viết từ MongoDB, dùng tạm Local RAM:', err);
     }
   }
-  
-  // Trả về local RAM và sắp xếp giảm dần theo thời gian tạo
+
+  // CHẾ ĐỘ CỤC BỘ: LOCAL FILE (RAM)
   return [...memoryArticles].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 }
 
@@ -99,11 +167,26 @@ export async function getArticles() {
  * @returns {Promise<object|null>}
  */
 export async function getArticleById(id) {
-  const isMongo = await initDb();
-  
-  if (isMongo && articlesCollection) {
+  await initDb();
+
+  // CHẾ ĐỘ 1: FIREBASE FIRESTORE
+  if (dbMode === 'firebase' && firestoreDb) {
     try {
-      // Tìm bằng ObjectId nếu là dạng hex hợp lệ, ngược lại dùng string
+      const doc = await firestoreDb.collection('articles').doc(id).get();
+      if (doc.exists) {
+        return {
+          id: doc.id,
+          ...doc.data()
+        };
+      }
+    } catch (err) {
+      console.error('Lỗi khi lấy chi tiết bài viết từ Firebase:', err);
+    }
+  }
+
+  // CHẾ ĐỘ 2: MONGODB ATLAS
+  if (dbMode === 'mongodb' && articlesCollection) {
+    try {
       let query = { _id: id };
       if (ObjectId.isValid(id)) {
         query = { _id: new ObjectId(id) };
@@ -119,8 +202,8 @@ export async function getArticleById(id) {
       console.error('Lỗi khi lấy chi tiết bài viết từ MongoDB:', err);
     }
   }
-  
-  // Tìm trong memory
+
+  // CHẾ ĐỘ CỤC BỘ: LOCAL RAM
   const article = memoryArticles.find(art => art.id === id);
   return article || null;
 }
@@ -131,18 +214,33 @@ export async function getArticleById(id) {
  * @returns {Promise<object>} - Bài viết đã được lưu kèm ID
  */
 export async function saveArticle(articleData) {
-  const isMongo = await initDb();
-  
+  await initDb();
+
   const now = new Date();
   const dateString = now.toISOString().split('T')[0]; // Định dạng YYYY-MM-DD
-  
+
   const article = {
     ...articleData,
     createdAt: now.toISOString(),
     dateString: dateString
   };
 
-  if (isMongo && articlesCollection) {
+  // CHẾ ĐỘ 1: FIREBASE FIRESTORE
+  if (dbMode === 'firebase' && firestoreDb) {
+    try {
+      const docRef = await firestoreDb.collection('articles').add(article);
+      console.log('📝 Đã lưu bài viết mới thành công lên Firebase Firestore!');
+      return {
+        ...article,
+        id: docRef.id
+      };
+    } catch (err) {
+      console.error('Lỗi lưu Firebase, lưu dự phòng xuống Local RAM:', err);
+    }
+  }
+
+  // CHẾ ĐỘ 2: MONGODB ATLAS
+  if (dbMode === 'mongodb' && articlesCollection) {
     try {
       const result = await articlesCollection.insertOne(article);
       console.log('📝 Đã lưu bài viết mới thành công lên MongoDB Atlas!');
@@ -154,16 +252,16 @@ export async function saveArticle(articleData) {
       console.error('Lỗi lưu MongoDB, lưu dự phòng xuống Local RAM:', err);
     }
   }
-  
-  // Lưu cục bộ (in-memory + local file)
+
+  // CHẾ ĐỘ CỤC BỘ: LOCAL RAM + FILE
   const localArticle = {
     ...article,
     id: Date.now().toString() // Dùng timestamp làm ID local
   };
-  
+
   memoryArticles.push(localArticle);
   saveLocalFile();
   console.log('📝 Đã lưu bài viết mới thành công xuống Database Local (articles_local.json)!');
-  
+
   return localArticle;
 }
