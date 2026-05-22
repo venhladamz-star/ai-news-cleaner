@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Newspaper, ShieldCheck, BookOpen, Sun, Moon } from 'lucide-react';
+import { Newspaper, ShieldCheck, BookOpen, Sun, Moon, Laptop, Smartphone } from 'lucide-react';
 import ReaderDashboard from './components/ReaderDashboard.jsx';
 import ReaderView from './components/ReaderView.jsx';
 import AdminPanel from './components/AdminPanel.jsx';
@@ -10,6 +10,7 @@ export default function App() {
   const [selectedArticle, setSelectedArticle] = useState(null);
   const [loadingArticles, setLoadingArticles] = useState(false);
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
+  const [layoutMode, setLayoutMode] = useState(localStorage.getItem('layoutMode') || null);
 
   // Quản lý lưu trữ và kích hoạt chủ đề sáng/tối
   useEffect(() => {
@@ -19,6 +20,12 @@ export default function App() {
 
   const toggleTheme = () => {
     setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+  };
+
+  const toggleLayout = () => {
+    const nextLayout = layoutMode === 'desktop' ? 'mobile' : 'desktop';
+    setLayoutMode(nextLayout);
+    localStorage.setItem('layoutMode', nextLayout);
   };
 
   // Tải danh sách bài báo khi khởi động ứng dụng
@@ -70,8 +77,56 @@ export default function App() {
     setSelectedArticle(null);
   };
 
+  // 1️⃣ HIỂN THỊ MÀN HÌNH WELCOME KHI CHƯA CHỌN GIAO DIỆN
+  if (!layoutMode) {
+    return (
+      <div className="welcome-container animate-fadeIn">
+        <div className="welcome-card glass-panel text-center">
+          <div className="welcome-icon-wrapper">
+            <Newspaper size={40} className="text-violet-400" />
+          </div>
+          <h1 className="welcome-title">AI Curated News</h1>
+          <p className="welcome-subtitle">
+            Chào mừng bạn đến với nền tảng đọc tin tức tinh khiết, sạch bóng quảng cáo. Hãy lựa chọn giao diện tối ưu nhất cho thiết bị của bạn:
+          </p>
+
+          <div className="selection-grid">
+            <div 
+              className="selection-card glass-panel"
+              onClick={() => {
+                setLayoutMode('desktop');
+                localStorage.setItem('layoutMode', 'desktop');
+              }}
+            >
+              <div className="selection-icon-circle desktop">
+                <Laptop size={32} />
+              </div>
+              <h3 className="selection-card-title">Laptop / Máy tính</h3>
+              <p className="selection-card-desc">Giao diện rộng rãi, 2 cột đọc báo song song cùng bảng phân tích AI cao cấp.</p>
+            </div>
+
+            <div 
+              className="selection-card glass-panel"
+              onClick={() => {
+                setLayoutMode('mobile');
+                localStorage.setItem('layoutMode', 'mobile');
+              }}
+            >
+              <div className="selection-icon-circle mobile">
+                <Smartphone size={32} />
+              </div>
+              <h3 className="selection-card-title">Smartphone</h3>
+              <p className="selection-card-desc">Giao diện xếp đứng gọn gàng, nút bấm lớn chạm mượt mà, tối ưu màn hình dọc.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 2️⃣ HIỂN THỊ TRANG CHÍNH SAU KHI ĐÃ CHỌN GIAO DIỆN
   return (
-    <div className="app-container">
+    <div className={`app-container layout-mode-${layoutMode}`}>
       
       {/* 🧭 THANH ĐIỀU HƯỚNG GLASSMORPHISM CAO CẤP */}
       <nav className="navbar">
@@ -96,6 +151,14 @@ export default function App() {
             <span>Cổng tuyển chọn (Admin)</span>
           </button>
           
+          <button 
+            className="layout-toggle-btn" 
+            onClick={toggleLayout} 
+            title={layoutMode === 'desktop' ? "Chuyển sang giao diện Smartphone" : "Chuyển sang giao diện Laptop"}
+          >
+            {layoutMode === 'desktop' ? <Laptop size={18} /> : <Smartphone size={18} />}
+          </button>
+
           <button 
             className="theme-toggle-btn" 
             onClick={toggleTheme} 

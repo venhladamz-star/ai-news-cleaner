@@ -973,3 +973,392 @@ body::after {
   font-weight: 700;
   font-style: normal;
 }
+
+/* -------------------------------------------------------------
+   MÀN HÌNH WELCOME LỰA CHỌN GIAO DIỆN (WELCOME/SPLASH SCREEN)
+   ------------------------------------------------------------- */
+.welcome-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 4rem);
+  padding: 2rem 1.5rem;
+}
+
+.welcome-card {
+  max-width: 800px;
+  width: 100%;
+  animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 3rem 2rem !important;
+}
+
+.welcome-icon-wrapper {
+  width: 5rem;
+  height: 5rem;
+  background: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 8px 30px rgba(139, 92, 246, 0.1);
+}
+
+.welcome-title {
+  font-family: var(--font-title);
+  font-size: 2.5rem;
+  font-weight: 850;
+  background: linear-gradient(135deg, #ffffff, var(--color-primary-light));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 0.75rem;
+}
+
+[data-theme="light"] .welcome-title {
+  background: linear-gradient(135deg, #0f172a, var(--color-primary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.welcome-subtitle {
+  font-size: 1.05rem;
+  color: var(--color-text-muted);
+  max-width: 600px;
+  margin: 0 auto 3rem auto;
+  line-height: 1.6;
+}
+
+/* Lưới chọn giao diện */
+.selection-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+@media (max-width: 640px) {
+  .selection-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+}
+
+.selection-card {
+  cursor: pointer;
+  padding: 2.25rem 1.5rem !important;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+.selection-card:hover {
+  transform: translateY(-5px);
+  border-color: var(--color-primary-light) !important;
+  background: rgba(139, 92, 246, 0.06) !important;
+  box-shadow: 0 15px 35px -10px rgba(139, 92, 246, 0.15) !important;
+}
+
+[data-theme="light"] .selection-card:hover {
+  border-color: var(--color-primary) !important;
+  background: rgba(124, 58, 237, 0.05) !important;
+  box-shadow: 0 15px 35px -10px rgba(124, 58, 237, 0.08) !important;
+}
+
+.selection-icon-circle {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+}
+
+.selection-icon-circle.desktop {
+  background: rgba(139, 92, 246, 0.1);
+  color: var(--color-primary-light);
+  border: 1px solid rgba(139, 92, 246, 0.25);
+}
+
+.selection-icon-circle.mobile {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--color-secondary-light);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+[data-theme="light"] .selection-icon-circle.desktop {
+  background: rgba(124, 58, 237, 0.08);
+  color: var(--color-primary);
+}
+
+[data-theme="light"] .selection-icon-circle.mobile {
+  background: rgba(5, 150, 105, 0.08);
+  color: var(--color-secondary);
+}
+
+.selection-card-title {
+  font-family: var(--font-title);
+  font-size: 1.35rem;
+  font-weight: 750;
+  margin-bottom: 0.75rem;
+  color: #ffffff;
+}
+
+[data-theme="light"] .selection-card-title {
+  color: var(--color-text-main);
+}
+
+.selection-card-desc {
+  font-size: 0.925rem;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
+/* -------------------------------------------------------------
+   NÚT CHUYỂN ĐỔI LAYOUT TRÊN NAVBAR
+   ------------------------------------------------------------- */
+.layout-toggle-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  color: var(--color-text-main);
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  margin-left: 0.5rem;
+}
+
+.layout-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.05);
+  border-color: var(--color-primary-light);
+}
+
+[data-theme="light"] .layout-toggle-btn {
+  background: rgba(15, 23, 42, 0.04);
+}
+
+[data-theme="light"] .layout-toggle-btn:hover {
+  background: rgba(15, 23, 42, 0.08);
+  border-color: var(--color-primary);
+}
+
+/* -------------------------------------------------------------
+   💎 TỐI ƯU HÓA HIỂN THỊ SMARTPHONE (SMARTPHONE VIEW OPTIMIZATIONS)
+   ------------------------------------------------------------- */
+.app-container.layout-mode-mobile {
+  max-width: 600px; /* Định hình khung đứng thon gọn như điện thoại */
+  margin: 0 auto;
+  padding: 1.25rem 0.75rem;
+}
+
+/* Nền tối ưu cho chế độ Mobile */
+.layout-mode-mobile::before, .layout-mode-mobile::after {
+  filter: blur(80px) !important;
+  width: 50% !important;
+  height: 50% !important;
+}
+
+/* 📱 Navbar trên mobile */
+.layout-mode-mobile .navbar {
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.5rem;
+  flex-direction: column;
+  gap: 0.75rem;
+  border-radius: 0.75rem;
+}
+
+.layout-mode-mobile .nav-brand {
+  font-size: 1.2rem;
+  width: 100%;
+  justify-content: center;
+}
+
+.layout-mode-mobile .nav-links {
+  width: 100%;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.layout-mode-mobile .nav-btn {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.85rem;
+  gap: 0.35rem;
+}
+
+/* 📱 Header & Title trên mobile */
+.layout-mode-mobile .header-section {
+  margin-bottom: 2rem;
+}
+
+.layout-mode-mobile .main-title {
+  font-size: 1.85rem;
+}
+
+.layout-mode-mobile .subtitle {
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+/* 📱 Dashboard controls & search trên mobile */
+.layout-mode-mobile .dashboard-controls {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.layout-mode-mobile .search-box {
+  max-width: 100%;
+}
+
+.layout-mode-mobile .search-input {
+  padding: 0.65rem 1rem 0.65rem 2.5rem;
+  font-size: 0.9rem;
+}
+
+/* 📱 Cards grid và bài viết trên mobile */
+.layout-mode-mobile .articles-grid {
+  grid-template-columns: 1fr !important; /* Luôn là 1 cột đứng */
+  gap: 1.25rem;
+}
+
+.layout-mode-mobile .glass-panel {
+  padding: 1.25rem !important; /* Padding vừa vặn màn hình điện thoại */
+  border-radius: 0.85rem;
+}
+
+.layout-mode-mobile .article-card-title {
+  font-size: 1.15rem;
+}
+
+.layout-mode-mobile .article-card-excerpt {
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.layout-mode-mobile .date-group-header {
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+/* 📱 Chi tiết bài đọc & AI summary trên mobile */
+.layout-mode-mobile .results-grid {
+  grid-template-columns: 1fr !important; /* Xếp dọc hoàn hảo */
+  gap: 1.5rem;
+}
+
+.layout-mode-mobile .article-title {
+  font-size: 1.5rem; /* Tiêu đề thon gọn dễ đọc */
+  line-height: 1.3;
+  margin-bottom: 1rem;
+}
+
+.layout-mode-mobile .reader-body {
+  font-size: 1rem; /* Cỡ chữ vừa phải */
+  line-height: 1.7;
+}
+
+.layout-mode-mobile .reader-body p {
+  margin-bottom: 1.15rem;
+}
+
+.layout-mode-mobile .paragraph-text {
+  font-size: 0.975rem;
+  line-height: 1.6;
+}
+
+.layout-mode-mobile .summary-text-box {
+  padding: 1.15rem;
+}
+
+.layout-mode-mobile .tabs-navigation {
+  padding: 0.25rem;
+  border-radius: 0.65rem;
+}
+
+.layout-mode-mobile .tab-btn {
+  padding: 0.5rem;
+  font-size: 0.85rem;
+  border-radius: 0.5rem;
+}
+
+/* 📱 Từ vựng 3D học tiếng Anh trên mobile */
+.layout-mode-mobile .vocabulary-title {
+  font-size: 1.15rem;
+  margin-bottom: 1rem;
+}
+
+.layout-mode-mobile .vocab-card {
+  padding: 1rem;
+  border-radius: 0.75rem;
+}
+
+.layout-mode-mobile .vocab-original {
+  font-size: 1.05rem;
+}
+
+.layout-mode-mobile .vocab-meaning {
+  font-size: 0.85rem;
+  padding: 0.15rem 0.45rem;
+}
+
+.layout-mode-mobile .vocab-example {
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+}
+
+/* 📱 Nút quay lại trên mobile */
+.layout-mode-mobile .reader-back-btn {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.75rem;
+}
+
+.layout-mode-mobile .reader-back-btn button {
+  width: 100%;
+  justify-content: center;
+}
+
+.layout-mode-mobile .reader-back-btn .flex {
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+/* 📱 Cổng quản trị Admin trên mobile */
+.layout-mode-mobile .admin-lock-card {
+  max-width: 100%;
+  margin: 1.5rem auto;
+}
+
+.layout-mode-mobile .pin-input {
+  font-size: 1.25rem;
+  padding: 0.85rem;
+}
+
+.layout-mode-mobile .admin-header-row {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 1rem;
+  text-align: center;
+}
+
+.layout-mode-mobile .admin-title {
+  font-size: 1.4rem;
+  justify-content: center;
+}
+
+.layout-mode-mobile .form-group input, 
+.layout-mode-mobile .form-group select {
+  font-size: 0.9rem;
+  padding: 0.75rem;
+}
+
+.layout-mode-mobile button[type="submit"] {
+  font-size: 0.95rem;
+  padding: 0.85rem;
+}
