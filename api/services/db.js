@@ -55,18 +55,36 @@ async function initDb() {
           let parsedCredentials;
           try {
             parsedCredentials = JSON.parse(firebaseAccount);
+            // Nếu bị bọc ngoặc kép 2 lần (thành string), parse tiếp lần nữa để ra object
+            if (typeof parsedCredentials === 'string') {
+              parsedCredentials = JSON.parse(parsedCredentials);
+            }
           } catch (jsonErr) {
-            // Thử làm sạch chuỗi nếu có ký tự xuống dòng hoặc escape sai lệch khi copy-paste
+            // Thử dọn dẹp các ký tự escape lỗi
             const cleaned = firebaseAccount.replace(/\\n/g, '\n').trim();
             parsedCredentials = JSON.parse(cleaned);
+            if (typeof parsedCredentials === 'string') {
+              parsedCredentials = JSON.parse(parsedCredentials);
+            }
           }
+
+          // SỬA LỖI KINH ĐIỂN TRÊN VERCEL: Đảm bảo private_key có ký tự xuống dòng thực tế
+          if (parsedCredentials && parsedCredentials.private_key) {
+            parsedCredentials.private_key = parsedCredentials.private_key.replace(/\\n/g, '\n');
+          }
+
           credential = admin.credential.cert(parsedCredentials);
         } else if (firebaseAccountPath && firebaseAccountPath.trim() !== '') {
           // Load từ đường dẫn file cục bộ (Lý tưởng khi chạy test trên máy tính cá nhân)
           const resolvedPath = path.resolve(process.cwd(), firebaseAccountPath);
           if (fs.existsSync(resolvedPath)) {
             const rawKey = fs.readFileSync(resolvedPath, 'utf8');
-            credential = admin.credential.cert(JSON.parse(rawKey));
+            const parsedLocal = JSON.parse(rawKey);
+            
+            if (parsedLocal && parsedLocal.private_key) {
+              parsedLocal.private_key = parsedLocal.private_key.replace(/\\n/g, '\n');
+            }
+            credential = admin.credential.cert(parsedLocal);
           } else {
             throw new Error(`Không tìm thấy file Firebase key tại: ${resolvedPath}`);
           }
@@ -83,7 +101,7 @@ async function initDb() {
       dbMode = 'firebase';
       return true;
     } catch (error) {
-      console.error('❌ Lỗi kết nối Firebase Firestore, thử chuyển sang phương án khác:', error.message);
+      console.error('❌ Lỗi kết nối Firebase Firestore, thử chuyển sang phương án khác:', error);
     }
   }
 
