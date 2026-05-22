@@ -52,7 +52,15 @@ async function initDb() {
 
         if (firebaseAccount && firebaseAccount.trim() !== '') {
           // Parse trực tiếp chuỗi JSON lưu trong biến môi trường (Lý tưởng trên Vercel)
-          credential = admin.credential.cert(JSON.parse(firebaseAccount));
+          let parsedCredentials;
+          try {
+            parsedCredentials = JSON.parse(firebaseAccount);
+          } catch (jsonErr) {
+            // Thử làm sạch chuỗi nếu có ký tự xuống dòng hoặc escape sai lệch khi copy-paste
+            const cleaned = firebaseAccount.replace(/\\n/g, '\n').trim();
+            parsedCredentials = JSON.parse(cleaned);
+          }
+          credential = admin.credential.cert(parsedCredentials);
         } else if (firebaseAccountPath && firebaseAccountPath.trim() !== '') {
           // Load từ đường dẫn file cục bộ (Lý tưởng khi chạy test trên máy tính cá nhân)
           const resolvedPath = path.resolve(process.cwd(), firebaseAccountPath);
@@ -67,10 +75,11 @@ async function initDb() {
         admin.initializeApp({
           credential: credential
         });
-
-        firestoreDb = admin.firestore();
-        console.log('✅ Đã kết nối thành công tới Firebase Firestore!');
+        console.log('✅ Đã khởi tạo Firebase Admin SDK thành công!');
       }
+
+      // LUÔN LUÔN gán lại firestoreDb để tránh bị null trong môi trường Vercel Serverless
+      firestoreDb = admin.firestore();
       dbMode = 'firebase';
       return true;
     } catch (error) {
