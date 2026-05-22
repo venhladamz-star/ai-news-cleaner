@@ -204,8 +204,8 @@ export default function App() {
       </main>
 
       {/* 📌 FOOTER */}
-      <footer className="mt-20 text-center text-xs text-slate-600 border-t border-slate-900 pt-6">
-        <p>© 2026 AI News Curated.</p>
+      <footer className="mt-20 text-center text-xs text-slate-600 border-t border-slate-900 pt-6 pb-8">
+        <p>© 2026 AI News Curated. Build by Vũ Khuê</p>
       </footer>
 
     </div>
