@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Newspaper, ShieldCheck, HelpCircle, BookOpen } from 'lucide-react';
+import { Newspaper, ShieldCheck, BookOpen, Sun, Moon } from 'lucide-react';
 import ReaderDashboard from './components/ReaderDashboard.jsx';
 import ReaderView from './components/ReaderView.jsx';
 import AdminPanel from './components/AdminPanel.jsx';
@@ -9,6 +9,17 @@ export default function App() {
   const [articles, setArticles] = useState([]);
   const [selectedArticle, setSelectedArticle] = useState(null);
   const [loadingArticles, setLoadingArticles] = useState(false);
+  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
+
+  // Quản lý lưu trữ và kích hoạt chủ đề sáng/tối
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+  };
 
   // Tải danh sách bài báo khi khởi động ứng dụng
   useEffect(() => {
@@ -84,6 +95,14 @@ export default function App() {
             <ShieldCheck size={16} />
             <span>Cổng tuyển chọn (Admin)</span>
           </button>
+          
+          <button 
+            className="theme-toggle-btn" 
+            onClick={toggleTheme} 
+            title={theme === 'dark' ? "Chuyển sang Chủ đề Sáng" : "Chuyển sang Chủ đề Tối"}
+          >
+            {theme === 'dark' ? <Sun size={18} className="text-amber-400" /> : <Moon size={18} className="text-slate-700" />}
+          </button>
         </div>
       </nav>
 
@@ -123,7 +142,7 @@ export default function App() {
 
       {/* 📌 FOOTER */}
       <footer className="mt-20 text-center text-xs text-slate-600 border-t border-slate-900 pt-6">
-        <p>© 2026 AI News Curated. Vận hành bởi Gemini 3.5 Flash & Cheerio Scraper.</p>
+        <p>© 2026 AI News Curated.</p>
       </footer>
 
     </div>
