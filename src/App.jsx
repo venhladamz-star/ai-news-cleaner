@@ -198,7 +198,8 @@ export default function App() {
 
         {activePage === 'admin' && (
           <AdminPanel
-            onArticlePublished={fetchArticles}
+            articles={articles}
+            onArticlesUpdated={fetchArticles}
           />
         )}
       </main>

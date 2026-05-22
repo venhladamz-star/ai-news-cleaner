@@ -315,3 +315,122 @@ export async function saveArticle(articleData) {
 
   return localArticle;
 }
+
+/**
+ * Cập nhật thông tin bài viết theo ID
+ * @param {string} id - Mã ID của bài báo
+ * @param {object} updatedData - Dữ liệu cập nhật mới
+ * @returns {Promise<object|null>}
+ */
+export async function updateArticle(id, updatedData) {
+  await initDb();
+
+  // CHẾ ĐỘ 1: FIREBASE FIRESTORE
+  if (dbMode === 'firebase' && firestoreDb) {
+    try {
+      const docRef = firestoreDb.collection('articles').doc(id);
+      const doc = await docRef.get();
+      if (doc.exists) {
+        const { id: _, ...dataToSave } = updatedData;
+        await docRef.update(dataToSave);
+        console.log(`📝 Đã cập nhật bài viết ${id} thành công trên Firebase Firestore!`);
+        return {
+          id,
+          ...doc.data(),
+          ...dataToSave
+        };
+      }
+    } catch (err) {
+      console.error('Lỗi cập nhật Firebase, thử cập nhật Local RAM:', err);
+    }
+  }
+
+  // CHẾ ĐỘ 2: MONGODB ATLAS
+  if (dbMode === 'mongodb' && articlesCollection) {
+    try {
+      let query = { _id: id };
+      if (ObjectId.isValid(id)) {
+        query = { _id: new ObjectId(id) };
+      }
+      const { id: _, _id: __, ...dataToSave } = updatedData;
+      const result = await articlesCollection.findOneAndUpdate(
+        query,
+        { $set: dataToSave },
+        { returnDocument: 'after' }
+      );
+      if (result) {
+        console.log(`📝 Đã cập nhật bài viết ${id} thành công trên MongoDB Atlas!`);
+        const updatedDoc = result.value || result;
+        return {
+          ...updatedDoc,
+          id: id
+        };
+      }
+    } catch (err) {
+      console.error('Lỗi cập nhật MongoDB, thử cập nhật Local RAM:', err);
+    }
+  }
+
+  // CHẾ ĐỘ CỤC BỘ: LOCAL RAM + FILE
+  const index = memoryArticles.findIndex(art => art.id === id);
+  if (index !== -1) {
+    const { id: _, ...dataToSave } = updatedData;
+    memoryArticles[index] = {
+      ...memoryArticles[index],
+      ...dataToSave
+    };
+    saveLocalFile();
+    console.log(`📝 Đã cập nhật bài viết ${id} thành công xuống Local File!`);
+    return memoryArticles[index];
+  }
+
+  return null;
+}
+
+/**
+ * Xóa bài viết theo ID
+ * @param {string} id - Mã ID của bài báo
+ * @returns {Promise<boolean>} - Trạng thái xóa
+ */
+export async function deleteArticle(id) {
+  await initDb();
+
+  // CHẾ ĐỘ 1: FIREBASE FIRESTORE
+  if (dbMode === 'firebase' && firestoreDb) {
+    try {
+      await firestoreDb.collection('articles').doc(id).delete();
+      console.log(`🗑️ Đã xóa bài viết ${id} thành công khỏi Firebase Firestore!`);
+      return true;
+    } catch (err) {
+      console.error('Lỗi xóa Firebase, thử xóa Local RAM:', err);
+    }
+  }
+
+  // CHẾ ĐỘ 2: MONGODB ATLAS
+  if (dbMode === 'mongodb' && articlesCollection) {
+    try {
+      let query = { _id: id };
+      if (ObjectId.isValid(id)) {
+        query = { _id: new ObjectId(id) };
+      }
+      const result = await articlesCollection.deleteOne(query);
+      if (result.deletedCount > 0) {
+        console.log(`🗑️ Đã xóa bài viết ${id} thành công khỏi MongoDB Atlas!`);
+        return true;
+      }
+    } catch (err) {
+      console.error('Lỗi xóa MongoDB, thử xóa Local RAM:', err);
+    }
+  }
+
+  // CHẾ ĐỘ CỤC BỘ: LOCAL RAM + FILE
+  const initialLength = memoryArticles.length;
+  memoryArticles = memoryArticles.filter(art => art.id !== id);
+  if (memoryArticles.length < initialLength) {
+    saveLocalFile();
+    console.log(`🗑️ Đã xóa bài viết ${id} thành công khỏi Local File!`);
+    return true;
+  }
+
+  return false;
+}

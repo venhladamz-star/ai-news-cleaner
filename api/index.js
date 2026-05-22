@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { cleanArticle, summarizeWithAI } from './services/newsCleaner.js';
-import { getArticles, getArticleById, saveArticle } from './services/db.js';
+import { getArticles, getArticleById, saveArticle, updateArticle, deleteArticle } from './services/db.js';
 
 dotenv.config();
 
@@ -12,7 +12,7 @@ const PORT = process.env.PORT || 5000;
 // Cấu hình Middleware
 app.use(cors({
   origin: '*', // Cho phép mọi kết nối trong môi trường dev
-  methods: ['GET', 'POST']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
 }));
 app.use(express.json());
 
@@ -114,6 +114,102 @@ app.post('/api/clean-news', async (req, res) => {
     return res.status(500).json({
       success: false,
       error: error.message || 'Có lỗi xảy ra khi xử lý bài viết.'
+    });
+  }
+});
+
+// 4. Endpoint cập nhật bài viết (Yêu cầu Admin PIN)
+app.put('/api/articles/:id', async (req, res) => {
+  const { id } = req.params;
+  const { pin, title, summary_vi, summary_en, bullets, phrases_english } = req.body;
+
+  // Xác thực mã PIN bảo mật
+  if (!pin || pin.toString() !== ADMIN_PIN.toString()) {
+    return res.status(401).json({
+      success: false,
+      error: 'Mã PIN Quản trị viên không chính xác. Bạn không có quyền chỉnh sửa bài viết.'
+    });
+  }
+
+  try {
+    const existing = await getArticleById(id);
+    if (!existing) {
+      return res.status(404).json({
+        success: false,
+        error: 'Không tìm thấy bài viết cần cập nhật.'
+      });
+    }
+
+    const updated = await updateArticle(id, {
+      title: title !== undefined ? title : existing.title,
+      summary_vi: summary_vi !== undefined ? summary_vi : existing.summary_vi,
+      summary_en: summary_en !== undefined ? summary_en : existing.summary_en,
+      bullets: bullets !== undefined ? bullets : existing.bullets,
+      phrases_english: phrases_english !== undefined ? phrases_english : existing.phrases_english,
+      url: existing.url,
+      cleanedHtml: existing.cleanedHtml,
+      createdAt: existing.createdAt,
+      dateString: existing.dateString
+    });
+
+    return res.json({
+      success: true,
+      message: 'Cập nhật bài viết thành công!',
+      article: updated
+    });
+  } catch (error) {
+    console.error('Lỗi khi cập nhật bài viết:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Có lỗi xảy ra khi cập nhật bài viết.'
+    });
+  }
+});
+
+// 5. Endpoint xóa bài viết (Yêu cầu Admin PIN)
+app.delete('/api/articles/:id', async (req, res) => {
+  const { id } = req.params;
+  const { pin } = req.body;
+  
+  let verifyPin = pin;
+  if (!verifyPin) {
+    verifyPin = req.headers['x-admin-pin'] || req.query.pin;
+  }
+
+  // Xác thực mã PIN bảo mật
+  if (!verifyPin || verifyPin.toString() !== ADMIN_PIN.toString()) {
+    return res.status(401).json({
+      success: false,
+      error: 'Mã PIN Quản trị viên không chính xác. Bạn không có quyền xóa bài viết.'
+    });
+  }
+
+  try {
+    const existing = await getArticleById(id);
+    if (!existing) {
+      return res.status(404).json({
+        success: false,
+        error: 'Không tìm thấy bài viết cần xóa.'
+      });
+    }
+
+    const deleted = await deleteArticle(id);
+    if (deleted) {
+      return res.json({
+        success: true,
+        message: 'Đã xóa bài viết thành công!'
+      });
+    } else {
+      return res.status(500).json({
+        success: false,
+        error: 'Không thể xóa bài viết khỏi cơ sở dữ liệu.'
+      });
+    }
+  } catch (error) {
+    console.error('Lỗi khi xóa bài viết:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Có lỗi xảy ra khi xóa bài viết.'
     });
   }
 });
