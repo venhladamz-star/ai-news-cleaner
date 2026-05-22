@@ -51,17 +51,40 @@ async function initDb() {
         let credential;
 
         if (firebaseAccount && firebaseAccount.trim() !== '') {
-          // Parse trực tiếp chuỗi JSON lưu trong biến môi trường (Lý tưởng trên Vercel)
+          // Làm sạch chuỗi trước khi parse
+          let rawConfig = firebaseAccount.trim();
+
+          // 1. Khử bỏ cặp dấu ngoặc kép hoặc ngoặc đơn bọc ngoài cùng (lỗi kinh điển khi nhập biến môi trường)
+          if (
+            (rawConfig.startsWith('"') && rawConfig.endsWith('"')) ||
+            (rawConfig.startsWith("'") && rawConfig.endsWith("'"))
+          ) {
+            const candidate = rawConfig.slice(1, -1).trim();
+            if (candidate.startsWith('{') || candidate.includes('"type":')) {
+              rawConfig = candidate;
+            }
+          }
+
+          // 2. Khắc phục lỗi copy thiếu dấu ngoặc nhọn mở `{` hoặc đóng `}` (nguyên nhân gây lỗi Unexpected non-whitespace character after JSON)
+          if (!rawConfig.startsWith('{') && rawConfig.includes('"type":')) {
+            console.log('⚠️ Phát hiện thiếu ngoặc nhọn mở `{`, đang tự động bổ sung...');
+            rawConfig = '{' + rawConfig;
+          }
+          if (!rawConfig.endsWith('}') && rawConfig.startsWith('{')) {
+            console.log('⚠️ Phát hiện thiếu ngoặc nhọn đóng `}`, đang tự động bổ sung...');
+            rawConfig = rawConfig + '}';
+          }
+
           let parsedCredentials;
           try {
-            parsedCredentials = JSON.parse(firebaseAccount);
+            parsedCredentials = JSON.parse(rawConfig);
             // Nếu bị bọc ngoặc kép 2 lần (thành string), parse tiếp lần nữa để ra object
             if (typeof parsedCredentials === 'string') {
               parsedCredentials = JSON.parse(parsedCredentials);
             }
           } catch (jsonErr) {
             // Thử dọn dẹp các ký tự escape lỗi
-            const cleaned = firebaseAccount.replace(/\\n/g, '\n').trim();
+            const cleaned = rawConfig.replace(/\\n/g, '\n').trim();
             parsedCredentials = JSON.parse(cleaned);
             if (typeof parsedCredentials === 'string') {
               parsedCredentials = JSON.parse(parsedCredentials);
