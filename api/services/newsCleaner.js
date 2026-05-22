@@ -118,14 +118,74 @@ LƯU Ý QUAN TRỌNG:
 1. Hãy lọc ra ít nhất 3-5 cụm từ tiếng Anh / idiom hữu ích từ bài báo (hoặc dịch các thuật ngữ quan trọng trong bài nếu bài báo viết bằng tiếng Việt).
 2. Hãy chỉ trả về JSON hợp lệ. Không viết thêm bất kỳ lời thoại nào trước hoặc sau JSON. Không dùng markdown block nếu có thể.`;
 
+  const beeknoeeKey = process.env.BEEKNOEE_API_KEY;
   const geminiKey = process.env.GEMINI_API_KEY;
+  const groqKey = process.env.GROQ_API_KEY;
+  const openrouterKey = process.env.OPENROUTER_API_KEY;
   const openAIKey = process.env.OPENAI_API_KEY;
+
+  // 0. CHẠY BEEKNOEE AI API (ĐỘNG CƠ ƯU TIÊN SỐ 1 - HÀNG RÀO BẢO VỆ CHÍNH)
+  if (beeknoeeKey && beeknoeeKey.trim() !== '' && beeknoeeKey !== 'your_beeknoee_api_key_here') {
+    console.log('--- Đang gọi Beeknoee AI API để xử lý bài báo... ---');
+    
+    // Thử tuần tự các mô hình Beeknoee theo thứ tự ưu tiên
+    const beeknoeeModels = [
+      'glm-4.5-flash',
+      'glm-4.7-flash',
+      'llama3.1-8b',
+      'qwen-3-235b-a22b-instruct-2507'
+    ];
+    let responseText = null;
+    let beeknoeeError = null;
+
+    for (const modelName of beeknoeeModels) {
+      try {
+        console.log(`🤖 Đang thử gọi Beeknoee bằng mô hình: "${modelName}"...`);
+        const response = await fetch('https://platform.beeknoee.com/api/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${beeknoeeKey}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            model: modelName,
+            messages: [{ role: 'user', content: prompt }],
+            temperature: 0.7,
+            max_tokens: 1500
+          })
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          responseText = result.choices[0].message.content;
+          console.log(`✅ Gọi thành công Beeknoee bằng mô hình: "${modelName}"`);
+          break;
+        } else {
+          const errData = await response.text();
+          console.warn(`⚠️ Beeknoee model "${modelName}" thất bại:`, errData);
+          beeknoeeError = new Error(errData);
+        }
+      } catch (err) {
+        console.warn(`⚠️ Lỗi kết nối Beeknoee model "${modelName}":`, err.message);
+        beeknoeeError = err;
+      }
+    }
+
+    if (responseText) {
+      try {
+        return parseAIResponse(responseText);
+      } catch (parseErr) {
+        console.error('Lỗi khi parse phản hồi từ Beeknoee:', parseErr);
+      }
+    } else {
+      console.error('Tất cả mô hình Beeknoee đều lỗi hoặc không phản hồi. Chuyển sang động cơ dự phòng tiếp theo...');
+    }
+  }
 
   // 1. CHẠY GEMINI API (NẾU CÓ KEY VỚI CƠ CHẾ KHÁNG LỖI ĐA MODEL)
   if (geminiKey && geminiKey.trim() !== '' && geminiKey !== 'your_gemini_api_key_here') {
     console.log('--- Đang gọi Gemini API để xử lý bài báo... ---');
     
-    // Thử tuần tự các tên model phổ biến của Gemini để kháng lỗi 404
     const modelsToTry = [
       'gemini-1.5-flash-latest', 
       'gemini-1.5-flash', 
@@ -171,7 +231,106 @@ LƯU Ý QUAN TRỌNG:
     }
   }
 
-  // 2. CHẠY OPENAI API (NẾU CÓ KEY VÀ KHÔNG DÙNG GEMINI HOẶC GEMINI LỖI)
+  // 2. CHẠY GROQ API (100% MIỄN PHÍ - SIÊU TỐC ĐỘ LPU)
+  if (groqKey && groqKey.trim() !== '' && groqKey !== 'your_groq_api_key_here') {
+    console.log('--- Đang gọi Groq API (Free Tier) để xử lý bài báo... ---');
+    
+    // Thử tuần tự Gemma 2 và Llama 3 miễn phí của Groq
+    const groqModels = ['gemma2-9b-it', 'llama-3.3-70b-versatile', 'llama3-8b-8192'];
+    let responseText = null;
+    
+    for (const modelName of groqModels) {
+      try {
+        console.log(`🤖 Đang thử gọi Groq bằng mô hình: "${modelName}"...`);
+        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${groqKey}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            model: modelName,
+            messages: [{ role: 'user', content: prompt }],
+            response_format: { type: 'json_object' }
+          })
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          responseText = result.choices[0].message.content;
+          console.log(`✅ Gọi thành công Groq bằng mô hình: "${modelName}"`);
+          break;
+        } else {
+          const errData = await response.text();
+          console.warn(`⚠️ Groq model "${modelName}" thất bại:`, errData);
+        }
+      } catch (err) {
+        console.warn(`⚠️ Lỗi kết nối Groq model "${modelName}":`, err.message);
+      }
+    }
+
+    if (responseText) {
+      try {
+        return parseAIResponse(responseText);
+      } catch (parseErr) {
+        console.error('Lỗi khi parse phản hồi từ Groq:', parseErr);
+      }
+    }
+  }
+
+  // 3. CHẠY OPENROUTER API (DANH SÁCH AI MIỄN PHÍ CỰC MẠNH)
+  if (openrouterKey && openrouterKey.trim() !== '' && openrouterKey !== 'your_openrouter_api_key_here') {
+    console.log('--- Đang gọi OpenRouter API (Free Models) để xử lý bài báo... ---');
+    
+    const openrouterModels = [
+      'google/gemma-2-9b-it:free', 
+      'meta-llama/llama-3-8b-instruct:free',
+      'mistralai/mistral-7b-instruct:free'
+    ];
+    let responseText = null;
+
+    for (const modelName of openrouterModels) {
+      try {
+        console.log(`🤖 Đang thử gọi OpenRouter bằng mô hình Free: "${modelName}"...`);
+        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${openrouterKey}`,
+            'Content-Type': 'application/json',
+            'HTTP-Referer': 'https://github.com/venhladamz-star/ai-news-cleaner',
+            'X-Title': 'AI News Curated'
+          },
+          body: JSON.stringify({
+            model: modelName,
+            messages: [{ role: 'user', content: prompt }],
+            response_format: { type: 'json_object' }
+          })
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          responseText = result.choices[0].message.content;
+          console.log(`✅ Gọi thành công OpenRouter bằng mô hình: "${modelName}"`);
+          break;
+        } else {
+          const errData = await response.text();
+          console.warn(`⚠️ OpenRouter model "${modelName}" thất bại:`, errData);
+        }
+      } catch (err) {
+        console.warn(`⚠️ Lỗi kết nối OpenRouter model "${modelName}":`, err.message);
+      }
+    }
+
+    if (responseText) {
+      try {
+        return parseAIResponse(responseText);
+      } catch (parseErr) {
+        console.error('Lỗi khi parse phản hồi từ OpenRouter:', parseErr);
+      }
+    }
+  }
+
+  // 4. CHẠY OPENAI API (NẾU CÓ KEY VÀ KHÔNG DÙNG CÁC PHƯƠNG ÁN TRÊN)
   if (openAIKey && openAIKey.trim() !== '' && openAIKey !== 'your_openai_api_key_here') {
     console.log('--- Đang gọi OpenAI API để xử lý bài báo... ---');
     try {
@@ -189,7 +348,7 @@ LƯU Ý QUAN TRỌNG:
     }
   }
 
-  // 3. MOCK MODE (NẾU KHÔNG CÓ API KEY HOẶC CẢ HAI LỖI)
+  // 5. MOCK MODE (NẾU KHÔNG CÓ API KEY HOẶC CÁC PHƯƠNG ÁN TRÊN ĐỀU LỖI)
   console.log('--- Đang chạy ở MOCK MODE (Không có API Key hoạt động) ---');
   return generateMockResponse(title, content);
 }
